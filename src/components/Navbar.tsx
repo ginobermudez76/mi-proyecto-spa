@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -12,8 +13,21 @@ const Navbar = ({ isCollapsed = false, onToggleSidebar }: NavbarProps) => {
   const { totalItems } = useCart();
   const { logout, userEmail } = useAuth();
   const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
+    setIsDropdownOpen(false);
     logout();
     navigate("/login");
   };
@@ -68,24 +82,34 @@ const Navbar = ({ isCollapsed = false, onToggleSidebar }: NavbarProps) => {
             {userEmail || "admin@upse.edu.ec"}
           </span>
 
-          {/* Contenedor con menú desplegable al pasar el cursor */}
-          <div className="relative group cursor-pointer py-1">
+          {/* Contenedor con menú desplegable */}
+          <div ref={dropdownRef} className="relative group cursor-pointer py-1">
             {/* Círculo del usuario / Avatar */}
-            <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border-2 border-indigo-100 shadow-sm flex items-center justify-center group-hover:border-indigo-400 transition-colors">
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border-2 border-indigo-100 shadow-sm flex items-center justify-center group-hover:border-indigo-400 focus:ring-2 focus:ring-indigo-400 outline-none transition-colors cursor-pointer"
+              aria-label="Menú de usuario"
+            >
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
                 alt="Avatar del usuario"
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  // Fallback visual si la red no carga la imagen externa
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />
               <GoogleIcon name="account_circle" size={32} className="text-slate-400 hidden" />
-            </div>
+            </button>
 
             {/* Menú desplegable */}
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 p-1.5">
+            <div
+              className={`absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl transition-all duration-200 z-50 p-1.5 ${
+                isDropdownOpen
+                  ? "opacity-100 visible"
+                  : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"
+              }`}
+            >
               <div className="px-3 py-2 border-b border-slate-100 md:hidden">
                 <p className="text-xs text-slate-400">Conectado como</p>
                 <p className="text-xs font-semibold text-slate-700 truncate">
