@@ -6,10 +6,15 @@ import GoogleIcon from "./common/GoogleIcon";
 
 interface NavbarProps {
   isCollapsed?: boolean;
+  isMobileOpen?: boolean;
   onToggleSidebar?: () => void;
 }
 
-const Navbar = ({ isCollapsed = false, onToggleSidebar }: NavbarProps) => {
+const Navbar = ({
+  isCollapsed = false,
+  isMobileOpen = false,
+  onToggleSidebar,
+}: NavbarProps) => {
   const { totalItems } = useCart();
   const { logout, userEmail } = useAuth();
   const navigate = useNavigate();
@@ -40,12 +45,24 @@ const Navbar = ({ isCollapsed = false, onToggleSidebar }: NavbarProps) => {
           <button
             onClick={onToggleSidebar}
             type="button"
-            aria-label={isCollapsed ? "Expandir menú lateral" : "Colapsar menú lateral"}
-            title={isCollapsed ? "Expandir menú lateral" : "Colapsar menú lateral"}
+            aria-label={
+              isMobileOpen
+                ? "Cerrar menú lateral"
+                : isCollapsed
+                ? "Expandir menú lateral"
+                : "Colapsar menú lateral"
+            }
+            title={
+              isMobileOpen
+                ? "Cerrar menú lateral"
+                : isCollapsed
+                ? "Expandir menú lateral"
+                : "Colapsar menú lateral"
+            }
             className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center cursor-pointer"
           >
             <GoogleIcon
-              name={isCollapsed ? "menu_open" : "menu"}
+              name={isMobileOpen ? "menu_open" : isCollapsed ? "menu_open" : "menu"}
               size={24}
               className="transition-transform duration-200"
             />
