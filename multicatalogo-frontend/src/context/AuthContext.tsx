@@ -3,7 +3,8 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 interface AuthContextType {
   isAuthenticated: boolean;
   userEmail: string | null;
-  login: (email: string) => void;
+  token: string | null;
+  login: (email: string, token: string) => void;
   logout: () => void;
 }
 
@@ -23,31 +24,42 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [userEmail, setUserEmail] = useState<string | null>(() => {
-    return localStorage.getItem('userEmail') || 'admin@upse.edu.ec';
-  });
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    const saved = localStorage.getItem('isAuthenticated');
-    return saved === null ? true : saved === 'true';
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('token');
   });
 
-  const login = (email: string) => {
+  const [userEmail, setUserEmail] = useState<string | null>(() => {
+    return localStorage.getItem('userEmail');
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const savedToken = localStorage.getItem('token');
+    const savedAuth = localStorage.getItem('isAuthenticated');
+    return Boolean(savedToken) || savedAuth === 'true';
+  });
+
+  const login = (email: string, authToken: string) => {
     setIsAuthenticated(true);
     setUserEmail(email);
+    setToken(authToken);
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('userEmail', email);
+    localStorage.setItem('token', authToken);
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setUserEmail(null);
-    localStorage.setItem('isAuthenticated', 'false');
+    setToken(null);
+    localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('token');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userEmail, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, userEmail, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+

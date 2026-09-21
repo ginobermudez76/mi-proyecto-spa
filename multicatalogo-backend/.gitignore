@@ -1,0 +1,11 @@
+# Binarios de Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+server
+
+# Variables de entorno
+.env
+.env.local

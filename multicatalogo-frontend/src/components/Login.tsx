@@ -1,26 +1,35 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { loginApi } from "../services/api";
 import GoogleIcon from "./common/GoogleIcon";
 
 const Login = () => {
   const [email, setEmail] = useState<string>("admin@upse.edu.ec");
   const [password, setPassword] = useState<string>("123456");
   const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-    // Simulación de validación hardcodeada según la guía
-    if (email.trim() === "admin@upse.edu.ec" && password === "123456") {
-      setError("");
-      login(email);
+    try {
+      const data = await loginApi({ email: email.trim(), password });
+      login(data.email, data.token);
       navigate("/");
-    } else {
-      setError("Credenciales incorrectas. Usa admin@upse.edu.ec / 123456");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Ocurrió un error inesperado al iniciar sesión.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,10 +121,24 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+            disabled={isLoading}
+            className={`w-full text-white font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+              isLoading
+                ? "bg-indigo-400 cursor-not-allowed shadow-none"
+                : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30 cursor-pointer active:scale-98"
+            }`}
           >
-            <span>Iniciar Sesión</span>
-            <GoogleIcon name="arrow_forward" size={18} />
+            {isLoading ? (
+              <>
+                <GoogleIcon name="progress_activity" size={18} className="animate-spin" />
+                <span>Iniciando sesión...</span>
+              </>
+            ) : (
+              <>
+                <span>Iniciar Sesión</span>
+                <GoogleIcon name="arrow_forward" size={18} />
+              </>
+            )}
           </button>
         </form>
       </div>
