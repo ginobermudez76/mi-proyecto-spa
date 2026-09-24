@@ -1,108 +1,113 @@
-import GoogleIcon from "./common/GoogleIcon";
+// src/components/MiRed.tsx
+// Red multinivel visual (Tema 5):
+// - Resumen: referidos activos, ventas de la red, comisiones del mes y nivel alcanzado
+// - Árbol jerárquico recursivo de referidos con comisión calculada por nivel
+import { redInicial, contarRed, sumarVentasRed, sumarComisiones, nivelAlcanzado, comisionDeReferido, TASA_COMISION, type Referido } from '../data/red';
 
-const MiRed = () => {
-  const referidos = [
-    {
-      id: 1,
-      nombre: "Ana García",
-      email: "ana.garcia@gmail.com",
-      nivel: "Nivel 1",
-      ventas: "$1,200",
-      estado: "Activo",
-    },
-    {
-      id: 2,
-      nombre: "Luis Poveda",
-      email: "luis.poveda@hotmail.com",
-      nivel: "Nivel 1",
-      ventas: "$850",
-      estado: "Activo",
-    },
-    {
-      id: 3,
-      nombre: "Marta Sánchez",
-      email: "marta.sanchez@outlook.com",
-      nivel: "Nivel 2",
-      ventas: "$430",
-      estado: "Activo",
-    },
-  ];
+// Colores y etiquetas por nivel para el árbol
+const NIVEL_ESTILO: Record<number, { badge: string; border: string; tasa: string }> = {
+  1: { badge: "bg-indigo-100 text-indigo-700", border: "border-indigo-200", tasa: "10 %" },
+  2: { badge: "bg-purple-100 text-purple-700", border: "border-purple-200", tasa: "5 %" },
+  3: { badge: "bg-pink-100 text-pink-700", border: "border-pink-200", tasa: "2 %" },
+};
+
+// Componente recursivo: renderiza un referido y, debajo, a sus hijos
+// Nota: la prop se llama "nodo" porque "ref" es una prop reservada en React 19
+const NodoReferido = ({ nodo }: { nodo: Referido }) => {
+  const estilo = NIVEL_ESTILO[nodo.nivel] ?? NIVEL_ESTILO[1];
+  const comision = comisionDeReferido(nodo);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
-            Mi Red de Referidos
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Visualiza y administra los miembros de tu red de distribución y sus comisiones.
-          </p>
+    <li>
+      <div className={`bg-white rounded-lg border ${estilo.border} shadow-sm p-4 flex flex-wrap items-center justify-between gap-3`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
+            {nodo.nombre.charAt(0)}
+          </div>
+          <div>
+            <p className="font-semibold text-slate-800">{nodo.nombre}</p>
+            <span className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${estilo.badge}`}>
+              Nivel {nodo.nivel} · {estilo.tasa} comisión
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="bg-indigo-50 text-indigo-700 font-semibold text-xs px-3 py-1.5 rounded-lg border border-indigo-100 flex items-center gap-1.5">
-            <GoogleIcon name="group" size={16} />
-            3 Referidos en total
-          </span>
+        <div className="text-right">
+          <p className="text-sm text-slate-500">Ventas</p>
+          <p className="font-bold text-slate-800">${nodo.ventas.toLocaleString()}</p>
+          <p className="text-xs text-indigo-600 font-semibold mt-1">
+            +${comision.toFixed(2)} para ti
+          </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="p-4 sm:px-6 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Afiliado / Nombre
-                </th>
-                <th className="p-4 sm:px-6 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Jerarquía
-                </th>
-                <th className="p-4 sm:px-6 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Ventas Mensuales
-                </th>
-                <th className="p-4 sm:px-6 font-semibold text-slate-600 text-xs uppercase tracking-wider text-right">
-                  Estado
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {referidos.map((ref) => (
-                <tr
-                  key={ref.id}
-                  className="hover:bg-slate-50/80 transition-colors"
-                >
-                  <td className="p-4 sm:px-6 text-slate-800">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-100 to-indigo-200 text-indigo-700 font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
-                        {ref.nombre.substring(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-800">{ref.nombre}</p>
-                        <p className="text-xs text-slate-400">{ref.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 sm:px-6 text-slate-600">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                      <GoogleIcon name="account_tree" size={14} className="text-indigo-500" />
-                      {ref.nivel}
-                    </span>
-                  </td>
-                  <td className="p-4 sm:px-6 text-indigo-600 font-bold text-base">
-                    {ref.ventas}
-                  </td>
-                  <td className="p-4 sm:px-6 text-right">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      {ref.estado}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Hijos del referido (más profundidad en el árbol) */}
+      {nodo.hijos && nodo.hijos.length > 0 && (
+        <ul className="mt-3 ml-6 space-y-3 border-l-2 border-slate-200 pl-4">
+          {nodo.hijos.map((hijo) => (
+            <NodoReferido key={hijo.id} nodo={hijo} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+};
+
+const MiRed = () => {
+  // KPIs derivados de los datos de la red (funciones puras en data/red.ts)
+  const referidosActivos = contarRed(redInicial);
+  const ventasRed = sumarVentasRed(redInicial);
+  const comisionesMes = sumarComisiones(redInicial);
+  const nivel = nivelAlcanzado(redInicial.hijos?.length ?? 0);
+
+  const resumen = [
+    { etiqueta: "Referidos Activos", valor: referidosActivos.toString(), color: "text-indigo-600" },
+    { etiqueta: "Ventas de la Red", valor: `$${ventasRed.toLocaleString()}`, color: "text-indigo-600" },
+    { etiqueta: "Comisiones del Mes", valor: `$${comisionesMes.toFixed(2)}`, color: "text-green-600" },
+    { etiqueta: "Nivel Alcanzado", valor: nivel, color: "text-amber-600" },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2">Mi Red de Referidos</h1>
+      <p className="text-slate-500 mb-6">
+        Estructura multinivel: gana el {TASA_COMISION[1] * 100} % de nivel 1, {TASA_COMISION[2] * 100} % de nivel 2 y {TASA_COMISION[3] * 100} % de nivel 3.
+      </p>
+
+      {/* ===== TARJETAS DE RESUMEN ===== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {resumen.map((item) => (
+          <div key={item.etiqueta} className="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+            <p className="text-sm text-slate-500 uppercase font-semibold">{item.etiqueta}</p>
+            <p className={`text-3xl font-bold mt-2 ${item.color}`}>{item.valor}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ===== ÁRBOL DE REFERIDOS ===== */}
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-bold text-slate-800 mb-4">Jerarquía de tu Red</h2>
+
+        {/* Raíz: el usuario */}
+        <div className="bg-slate-900 text-white rounded-lg p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold">
+              {redInicial.nombre.charAt(0)}
+            </div>
+            <div>
+              <p className="font-semibold">{redInicial.nombre}</p>
+              <p className="text-xs text-slate-300">Nivel alcanzado: {nivel}</p>
+            </div>
+          </div>
+          <p className="font-bold text-green-400">
+            Comisiones del mes: ${comisionesMes.toFixed(2)}
+          </p>
         </div>
+
+        <ul className="space-y-3">
+          {redInicial.hijos?.map((hijo) => (
+            <NodoReferido key={hijo.id} nodo={hijo} />
+          ))}
+        </ul>
       </div>
     </div>
   );

@@ -1,10 +1,19 @@
+// src/context/AuthContext.tsx
 import { createContext, useContext, useState, type ReactNode } from 'react';
+
+// 1. Tipos de rol que maneja la aplicación
+export type Rol = 'admin' | 'cliente';
+
+// 2. Usuario autenticado: correo + rol (lo entrega la API en /api/login)
+export interface Usuario {
+  email: string;
+  rol: Rol;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  userEmail: string | null;
-  token: string | null;
-  login: (email: string, token: string) => void;
+  user: Usuario | null;
+  login: (usuario: Usuario) => void;
   logout: () => void;
 }
 
@@ -24,42 +33,33 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('token');
-  });
-
-  const [userEmail, setUserEmail] = useState<string | null>(() => {
-    return localStorage.getItem('userEmail');
-  });
-
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedAuth = localStorage.getItem('isAuthenticated');
-    return Boolean(savedToken) || savedAuth === 'true';
+    return !!localStorage.getItem("multicatalogo_user");
+  });
+  const [user, setUser] = useState<Usuario | null>(() => {
+    try {
+      const saved = localStorage.getItem("multicatalogo_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
-  const login = (email: string, authToken: string) => {
+  const login = (usuario: Usuario) => {
     setIsAuthenticated(true);
-    setUserEmail(email);
-    setToken(authToken);
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('token', authToken);
+    setUser(usuario);
+    localStorage.setItem("multicatalogo_user", JSON.stringify(usuario));
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    setUserEmail(null);
-    setToken(null);
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('token');
+    setUser(null);
+    localStorage.removeItem("multicatalogo_user");
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userEmail, token, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
